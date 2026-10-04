@@ -3,6 +3,9 @@ import time
 from math import asin, pi
 
 GAMMA = 3.0
+# BPM peut-être modifié
+BPM = 85
+BEAT = 60 / BPM
 
 buzzer = machine.PWM(machine.Pin(27))
 potar = machine.ADC(machine.Pin(28))
@@ -122,16 +125,44 @@ def play_note(note, duration):
     while time.ticks_diff(end, time.ticks_ms()) > 0:
         update_volume()
         time.sleep_ms(10)
+
+def play_melody(melody):
+    for note, beats in melody:
+        duration = beats * BEAT
+        if note is None:
+            buzzer.duty_u16(0)
+            end = time.ticks_add(time.ticks_ms(), int(duration * 1000))
+            while time.ticks_diff(end, time.ticks_ms()) > 0:
+                time.sleep_ms(10)
+        else:
+            play_note(note, duration * 0.9)
+            buzzer.duty_u16(0)
+            time.sleep(duration * 0.1)
     
 
 filtered = potar.read_u16()
 
+# Mélodies d'exemple. Il suffit de rajouter ses propres mélodies dans la liste pour pouvoir les jouer.
+# Dans une mélodie qui est une liste de tuples, le premier élément du tuple est une note se trouvant dans "tones" ou "None" pour un silence
+# Le deuxième élément est le nombre de temps que la note doit durer. 2 pour une blanche, 1 pour une noire, 0.5 pour une croche et 0.25 pour une double croche
+# Rythme 5/8 chaque mesure est égale à 2.5 noire
+melody1 = [
+    ("D4", 0.5), ("DS4", 0.5), ("A4", 1), ("G4", 0.5),
+    ("F4", 0.5), ("DS4", 0.5), ("D4", 1), ("AS3", 0.5),
+    ("D4", 0.5), ("DS4", 0.5), ("A4", 1), ("A4", 0.5),
+    ("A4", 0.5), ("G4", 0.5), ("F4", 0.5), ("DS4", 0.5), ("D4", 0.5),
+    ("D4", 2.5),
+]
+
+#Rythme 4/4 chaque mesure est égale à 4 noire
+melody2 = [
+    ("D2", 1), ("D2", 0.5), ("F2", 0.5), ("A1", 1), ("C2", 1),
+    ("D2", 1), ("D2", 0.5), ("F2", 0.5), ("G1", 1), ("AS1", 1),
+    ("D2", 1), ("D2", 0.5), ("F2", 0.5), ("A1", 1), ("C2", 1),
+    ("DS2", 1), ("D2", 1), ("AS1", 1), ("A1", 1),
+]
+
+melodyList = [melody1, melody2]
+
 while True:
-    play_note("C4", 0.5)
-    play_note("D4", 0.5)
-    play_note("E4", 0.5)
-    play_note("F4", 0.5)
-    play_note("G4", 0.5)
-    play_note("A4", 0.5)
-    play_note("B4", 0.5)
-    play_note("C5", 0.5)
+    play_melody(melodyList[0])
