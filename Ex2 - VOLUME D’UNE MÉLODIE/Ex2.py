@@ -9,6 +9,8 @@ BEAT = 60 / BPM
 
 buzzer = machine.PWM(machine.Pin(27))
 potar = machine.ADC(machine.Pin(28))
+button = machine.Pin(20, machine.Pin.IN, machine.Pin.PULL_UP)
+led = machine.Pin(18, machine.Pin.OUT)
 
 tones = {
 "B0": 31,
@@ -135,7 +137,9 @@ def play_melody(melody):
             while time.ticks_diff(end, time.ticks_ms()) > 0:
                 time.sleep_ms(10)
         else:
+            led.value(1)
             play_note(note, duration * 0.9)
+            led.value(0)
             buzzer.duty_u16(0)
             time.sleep(duration * 0.1)
     
@@ -164,5 +168,15 @@ melody2 = [
 
 melodyList = [melody1, melody2]
 
+nPress = 0
+
+def onPress(pin):
+    global nPress
+    nPress += 1
+    nPress %= len(melodyList)
+    print(nPress)
+
+button.irq(trigger=machine.Pin.IRQ_FALLING, handler=onPress)
+
 while True:
-    play_melody(melodyList[0])
+    play_melody(melodyList[nPress])
